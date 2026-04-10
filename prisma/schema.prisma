@@ -7,6 +7,49 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+enum OpportunityType {
+  ABANDONED_CHECKOUT
+  PENDING_PAYMENT_ORDER
+}
+
+enum OpportunityStatus {
+  CAPTURED
+  ELIGIBLE
+  SENT_ONCE
+  SENT_MULTIPLE
+  CONVERTED
+  EXPIRED
+  INELIGIBLE
+}
+
+enum SyncType {
+  ABANDONED_CHECKOUTS
+  PENDING_PAYMENT_ORDERS
+  CONVERSION_RECONCILIATION
+}
+
+enum SyncStatus {
+  IDLE
+  RUNNING
+  SUCCEEDED
+  FAILED
+}
+
+enum ConversionType {
+  CHECKOUT_COMPLETED
+  ORDER_PAID
+  MANUAL_MATCH
+}
+
+enum RecoveryChannel {
+  WHATSAPP_WEB
+}
+
 model Session {
   id            String   @id
   shop          String
@@ -29,8 +72,97 @@ model Session {
 }
 
 model Store {
-  id         String   @id @default(cuid())
-  shopDomain String   @unique
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id                    String                @id @default(cuid())
+  shopDomain            String                @unique
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  settings              StoreSettings?
+  recoveryOpportunities RecoveryOpportunity[]
+  syncCheckpoints       SyncCheckpoint[]
+
+  @@index([createdAt])
+}
+
+model StoreSettings {
+  id                     String       @id @default(cuid())
+  storeId                String       @unique
+  recoveryEnabled        Boolean      @default(true)
+  captureAbandoned       Boolean      @default(true)
+  capturePendingOrders   Boolean      @default(true)
+  attributionWindowHours Int          @default(72)
+  discountEnabled        Boolean      @default(false)
+  discountType           DiscountType?
+  discountValue          Decimal?     @db.Decimal(10, 2)
+  createdAt              DateTime     @default(now())
+  updatedAt              DateTime     @updatedAt
+  store                  Store        @relation(fields: [storeId], references: [id], onDelete: Cascade)
+}
+
+model RecoveryOpportunity {
+  id                      String             @id @default(cuid())
+  storeId                 String
+  opportunityType         OpportunityType
+  status                  OpportunityStatus  @default(CAPTURED)
+  sourceShopifyId         String
+  orderGid                String?
+  checkoutGid             String?
+  orderName               String?
+  customerName            String?
+  customerFirstName       String?
+  customerEmail           String?
+  customerPhoneNormalized String?
+  currency                String             @default("BRL") @db.VarChar(3)
+  cartValue               Decimal            @default(0) @db.Decimal(12, 2)
+  recoveryUrl             String?
+  checkoutUrl             String?
+  discountCode            String?
+  capturedAt              DateTime           @default(now())
+  lastAttemptAt           DateTime?
+  convertedAt             DateTime?
+  convertedOrderId        String?
+  conversionType          ConversionType?
+  expiresAt               DateTime?
+  createdAt               DateTime           @default(now())
+  updatedAt               DateTime           @updatedAt
+  store                   Store              @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  attempts                RecoveryAttempt[]
+
+  @@unique([storeId, opportunityType, sourceShopifyId])
+  @@index([storeId, status])
+  @@index([storeId, opportunityType, status])
+  @@index([storeId, customerEmail])
+  @@index([storeId, customerPhoneNormalized])
+  @@index([storeId, capturedAt])
+  @@index([convertedAt])
+}
+
+model RecoveryAttempt {
+  id                    String              @id @default(cuid())
+  recoveryOpportunityId String
+  channel               RecoveryChannel     @default(WHATSAPP_WEB)
+  messageRendered       String
+  attemptNumber         Int
+  sentAt                DateTime            @default(now())
+  recoveryOpportunity   RecoveryOpportunity @relation(fields: [recoveryOpportunityId], references: [id], onDelete: Cascade)
+
+  @@unique([recoveryOpportunityId, attemptNumber])
+  @@index([recoveryOpportunityId, sentAt])
+}
+
+model SyncCheckpoint {
+  id             String      @id @default(cuid())
+  storeId        String
+  syncType       SyncType
+  lastCursor     String?
+  lastSyncedAt   DateTime?
+  lastStartedAt  DateTime?
+  lastFinishedAt DateTime?
+  lastStatus     SyncStatus  @default(IDLE)
+  lastError      String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  store          Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@unique([storeId, syncType])
+  @@index([storeId, lastStatus])
 }

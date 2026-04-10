@@ -2,16 +2,14 @@
 
 App embedded para Shopify Brasil focado em recuperação de vendas via WhatsApp.
 
-## Etapa 1 implementada
+## Etapa 2 implementada
 
 Nesta etapa o repositório já inclui:
 
-- base em TypeScript para app embedded com Remix
-- `shopify.server.ts` com `authenticate.admin`
-- Polaris e App Bridge provider na rota `/app`
-- Prisma configurado
-- helper singleton de Prisma server-side
-- helper para obter ou criar `Store` a partir de `session.shop`
+- schema Prisma expandido com os models do MVP
+- enums de domínio para oportunidade, sync, conversão e desconto
+- migration inicial dos modelos de recuperação
+- índices e chaves únicas para suportar upsert, dashboard e checkpoints
 
 ## Estrutura principal
 
@@ -33,6 +31,7 @@ app/
   root.tsx
   shopify.server.ts
 prisma/
+  migrations/
   schema.prisma
 ```
 
@@ -58,30 +57,36 @@ cp .env.example .env
 npx prisma generate
 ```
 
-5. Rode a migration inicial:
+5. Rode a migration:
 
 ```bash
-npx prisma migrate dev --name init
+npx prisma migrate dev
 ```
 
-6. Rode o app:
+6. Valide o schema:
+
+```bash
+npx prisma validate
+```
+
+7. Rode o app:
 
 ```bash
 npm run dev
 ```
 
-## Validação da Etapa 1
+## Validação da Etapa 2
 
 - `npx prisma validate` deve passar
-- `npm run typecheck` deve passar
-- ao abrir `/app`, a rota deve exigir autenticação via `authenticate.admin`
-- após autenticar, a loader de `/app` e `/app._index` deve conseguir resolver `session.shop`
-- o helper `getOrCreateStoreByShopDomain()` deve criar ou retornar a loja no banco
+- `npx prisma migrate dev` deve criar as tabelas e enums novos
+- o banco deve passar a ter:
+  - `StoreSettings`
+  - `RecoveryOpportunity`
+  - `RecoveryAttempt`
+  - `SyncCheckpoint`
+- a unique key de oportunidade deve impedir duplicação por origem Shopify dentro da loja
+- a unique key de checkpoint deve garantir um checkpoint por tipo de sync em cada loja
 
 ## Próximo passo
 
-Etapa 2: expandir o `schema.prisma` com os models e enums do MVP:
-- `StoreSettings`
-- `RecoveryOpportunity`
-- `RecoveryAttempt`
-- `SyncCheckpoint`
+Etapa 3: criar o cliente server-side de GraphQL da Shopify com tratamento de erro HTTP, erro GraphQL e base para paginação.
