@@ -2,14 +2,14 @@
 
 App embedded para Shopify Brasil focado em recuperação de vendas via WhatsApp.
 
-## Etapa 5 implementada
+## Etapa 6 implementada
 
 Nesta etapa o repositório já inclui:
 
-- checkpoints por tipo de sync
-- runner consolidado por loja
-- separação de sucesso/falha por fonte
-- progressão incremental com `lastCursor` e `lastSyncedAt`
+- service de dashboard com agregações Prisma
+- breakdown por origem de oportunidade
+- KPIs consolidados de captura, elegibilidade, envio e conversão
+- cálculo de recuperação bruta e líquida no formato v0.1
 
 ## Estrutura principal
 
@@ -22,6 +22,7 @@ app/
       store.server.ts
   modules/
     recovery/
+      dashboard-summary.server.ts
       recovery-opportunity.mapper.server.ts
       recovery-opportunity.repository.server.ts
       run-recovery-sync.server.ts
@@ -88,14 +89,14 @@ npm run typecheck
 npm run dev
 ```
 
-## Validação da Etapa 5
+## Validação da Etapa 6
 
-- `getOrCreateSyncCheckpoint()` deve garantir um checkpoint por `storeId + syncType`
-- `markSyncStarted()` deve marcar `RUNNING` e limpar erro anterior
-- `markSyncSucceeded()` deve salvar `lastCursor`, `lastSyncedAt` e `SUCCEEDED`
-- `markSyncFailed()` deve salvar `FAILED` e o erro serializado
-- `runRecoverySyncForStore()` deve executar cada fonte isoladamente e devolver um resumo consolidado
+- `getDashboardSummary(storeId)` deve devolver os KPIs gerais do dashboard
+- o service deve usar `aggregate()` para totais
+- o service deve usar `groupBy()` para o breakdown por `OpportunityType`
+- `recoveryRate` deve ser calculada sobre capturado vs convertido
+- no v0.1, `discountValue` ainda fica zerado por ausência de campo específico no schema
 
 ## Próximo passo
 
-Etapa 6: criar `getDashboardSummary(storeId)` com agregações Prisma e breakdown por origem.
+Etapa 7: criar reconciliação v0.1 para detectar pedidos pagos e marcar oportunidades como convertidas.
