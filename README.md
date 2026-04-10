@@ -2,15 +2,14 @@
 
 App embedded para Shopify Brasil focado em recuperação de vendas via WhatsApp.
 
-## Etapa 3 implementada
+## Etapa 4 implementada
 
 Nesta etapa o repositório já inclui:
 
-- utilitário server-side para chamadas GraphQL no Admin da Shopify
-- tratamento explícito para erro HTTP
-- tratamento explícito para erro GraphQL
-- helper base para paginação por connection
-- documentação de uso do cliente
+- queries GraphQL para `abandonedCheckouts` e `orders`
+- mapeadores para `RecoveryOpportunity`
+- upsert por chave estável da origem Shopify
+- syncs iniciais para captura de abandonados e pedidos pendentes
 
 ## Estrutura principal
 
@@ -21,6 +20,15 @@ app/
       prisma.server.ts
       shopify-graphql.server.ts
       store.server.ts
+  modules/
+    recovery/
+      recovery-opportunity.mapper.server.ts
+      recovery-opportunity.repository.server.ts
+      sync-abandoned-checkouts.server.ts
+      sync-pending-orders.server.ts
+      shopify/
+        recovery-shopify.queries.server.ts
+        recovery-shopify.types.ts
   routes/
     _index.tsx
     app.tsx
@@ -45,7 +53,7 @@ prisma/
 npm install
 ```
 
-2. Copie o aquivo de ambiente:
+2. Copie o arquivo de ambiente:
 
 ```bash
 cp .env.example .env
@@ -56,19 +64,19 @@ cp .env.example .env
 4. Gere o client do Prisma:
 
 ```bash
-nxp prisma generate
+npx prisma generate
 ```
 
 5. Rode a migration:
 
 ```bash
-nxp prisma migrate dev
+npx prisma migrate dev
 ```
 
 6. Valide types e schema:
 
 ```bash
-nxp prisma validate
+npx prisma validate
 npm run typecheck
 ```
 
@@ -78,13 +86,13 @@ npm run typecheck
 npm run dev
 ```
 
-## Valida ção da Etapa 3
+## Validação da Etapa 4
 
-- o helper `executeAdminGraphQL()` deve lançar erro quando a resposta HTTP não for `ok`
-- o helper `executeAdminGraphQL()` deve lançar erro quando `errors[]` vier no payload GraphQL
-- o helper `fetchAdminConnectionPage()` identifica normalizar `nodes`, `edges` e `pageInfo`
-- o cliente deve ser reutilizável pelas próximas etapas de ingestão
+- `syncAbandonedCheckouts()` deve consultar a Shopify, mapear e persistir oportunidades por `sourceShopifyId`
+- `syncPendingOrders()` deve consultar pedidos pendentes, mapear e persistir oportunidades por `sourceShopifyId`
+- a unique key composta deve impedir duplicação por loja e tipo de oportunidade
+- o status inicial deve ser `ELIGIBLE` apenas quando existir telefone normalizado e link de retomada
 
 ## Próximo passo
 
-Etapa 4: criar queries para `abandonedCheckouts` e `orders` com pagamento pendente, mapear para `RecoveryOpportunity` e implementar os syncs iniciais.
+Etapa 5: criar checkpoints e runner consolidado para sincronização por loja.
