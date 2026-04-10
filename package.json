@@ -3,9 +3,34 @@
   "private": true,
   "version": "0.1.0",
   "description": "Shopify embedded app para recuperação de vendas via WhatsApp",
+  "type": "module",
   "scripts": {
-    "dev": "echo \"Bootstrap inicial do projeto Zapay\"",
-    "build": "echo \"Build ainda não configurado\"",
-    "start": "echo \"Start ainda não configurado\""
+    "dev": "shopify app dev",
+    "build": "remix build",
+    "start": "remix-serve build/index.js",
+    "typecheck": "tsc --noEmit",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:studio": "prisma studio"
+  },
+  "dependencies": {
+    "@prisma/client": "latest",
+    "@remix-run/node": "latest",
+    "@remix-run/react": "latest",
+    "@shopify/app-bridge-react": "latest",
+    "@shopify/polaris": "latest",
+    "@shopify/shopify-api": "latest",
+    "@shopify/shopify-app-remix": "latest",
+    "@shopify/shopify-app-session-storage-prisma": "latest",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@remix-run/dev": "latest",
+    "@types/node": "^22.10.2",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "prisma": "latest",
+    "typescript": "^5.7.2"
   }
 }
