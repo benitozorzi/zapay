@@ -2,14 +2,14 @@
 
 App embedded para Shopify Brasil focado em recuperação de vendas via WhatsApp.
 
-## Etapa 4 implementada
+## Etapa 5 implementada
 
 Nesta etapa o repositório já inclui:
 
-- queries GraphQL para `abandonedCheckouts` e `orders`
-- mapeadores para `RecoveryOpportunity`
-- upsert por chave estável da origem Shopify
-- syncs iniciais para captura de abandonados e pedidos pendentes
+- checkpoints por tipo de sync
+- runner consolidado por loja
+- separação de sucesso/falha por fonte
+- progressão incremental com `lastCursor` e `lastSyncedAt`
 
 ## Estrutura principal
 
@@ -24,7 +24,9 @@ app/
     recovery/
       recovery-opportunity.mapper.server.ts
       recovery-opportunity.repository.server.ts
+      run-recovery-sync.server.ts
       sync-abandoned-checkouts.server.ts
+      sync-checkpoints.server.ts
       sync-pending-orders.server.ts
       shopify/
         recovery-shopify.queries.server.ts
@@ -86,13 +88,14 @@ npm run typecheck
 npm run dev
 ```
 
-## Validação da Etapa 4
+## Validação da Etapa 5
 
-- `syncAbandonedCheckouts()` deve consultar a Shopify, mapear e persistir oportunidades por `sourceShopifyId`
-- `syncPendingOrders()` deve consultar pedidos pendentes, mapear e persistir oportunidades por `sourceShopifyId`
-- a unique key composta deve impedir duplicação por loja e tipo de oportunidade
-- o status inicial deve ser `ELIGIBLE` apenas quando existir telefone normalizado e link de retomada
+- `getOrCreateSyncCheckpoint()` deve garantir um checkpoint por `storeId + syncType`
+- `markSyncStarted()` deve marcar `RUNNING` e limpar erro anterior
+- `markSyncSucceeded()` deve salvar `lastCursor`, `lastSyncedAt` e `SUCCEEDED`
+- `markSyncFailed()` deve salvar `FAILED` e o erro serializado
+- `runRecoverySyncForStore()` deve executar cada fonte isoladamente e devolver um resumo consolidado
 
 ## Próximo passo
 
-Etapa 5: criar checkpoints e runner consolidado para sincronização por loja.
+Etapa 6: criar `getDashboardSummary(storeId)` com agregações Prisma e breakdown por origem.
