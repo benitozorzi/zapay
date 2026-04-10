@@ -2,14 +2,15 @@
 
 App embedded para Shopify Brasil focado em recuperação de vendas via WhatsApp.
 
-## Etapa 6 implementada
+## Etapa 7 implementada
 
 Nesta etapa o repositório já inclui:
 
-- service de dashboard com agregações Prisma
-- breakdown por origem de oportunidade
-- KPIs consolidados de captura, elegibilidade, envio e conversão
-- cálculo de recuperação bruta e líquida no formato v0.1
+- query de pedidos pagos
+- busca de oportunidades abertas com tentativa
+- score conservador de matching
+- marcação de conversão no banco
+- reconciliação v0.1 por loja
 
 ## Estrutura principal
 
@@ -23,6 +24,7 @@ app/
   modules/
     recovery/
       dashboard-summary.server.ts
+      reconcile-conversions.server.ts
       recovery-opportunity.mapper.server.ts
       recovery-opportunity.repository.server.ts
       run-recovery-sync.server.ts
@@ -30,6 +32,8 @@ app/
       sync-checkpoints.server.ts
       sync-pending-orders.server.ts
       shopify/
+        reconciliation-shopify.queries.server.ts
+        reconciliation-shopify.types.ts
         recovery-shopify.queries.server.ts
         recovery-shopify.types.ts
   routes/
@@ -89,14 +93,14 @@ npm run typecheck
 npm run dev
 ```
 
-## Validação da Etapa 6
+## Validação da Etapa 7
 
-- `getDashboardSummary(storeId)` deve devolver os KPIs gerais do dashboard
-- o service deve usar `aggregate()` para totais
-- o service deve usar `groupBy()` para o breakdown por `OpportunityType`
-- `recoveryRate` deve ser calculada sobre capturado vs convertido
-- no v0.1, `discountValue` ainda fica zerado por ausência de campo específico no schema
+- `reconcileConversionsForStore()` deve buscar pedidos pagos recentes
+- a função deve buscar oportunidades abertas que já receberam tentativa
+- o matching deve aceitar `orderGid` exato com prioridade máxima
+- o matching heurístico deve combinar e-mail, telefone e valor de forma conservadora
+- a oportunidade reconciliada deve ser marcada como `CONVERTED`
 
 ## Próximo passo
 
-Etapa 7: criar reconciliação v0.1 para detectar pedidos pagos e marcar oportunidades como convertidas.
+Etapa 8: criar API routes JSON autenticadas para dashboard, oportunidades, settings, sync e envio no WhatsApp.
