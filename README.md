@@ -2,14 +2,15 @@
 
 App embedded para Shopify Brasil focado em recuperação de vendas via WhatsApp.
 
-## Etapa 2 implementada
+## Etapa 3 implementada
 
 Nesta etapa o repositório já inclui:
 
-- schema Prisma expandido com os models do MVP
-- enums de domínio para oportunidade, sync, conversão e desconto
-- migration inicial dos modelos de recuperação
-- índices e chaves únicas para suportar upsert, dashboard e checkpoints
+- utilitário server-side para chamadas GraphQL no Admin da Shopify
+- tratamento explícito para erro HTTP
+- tratamento explícito para erro GraphQL
+- helper base para paginação por connection
+- documentação de uso do cliente
 
 ## Estrutura principal
 
@@ -18,6 +19,7 @@ app/
   lib/
     server/
       prisma.server.ts
+      shopify-graphql.server.ts
       store.server.ts
   routes/
     _index.tsx
@@ -43,7 +45,7 @@ prisma/
 npm install
 ```
 
-2. Copie o arquivo de ambiente:
+2. Copie o aquivo de ambiente:
 
 ```bash
 cp .env.example .env
@@ -54,19 +56,20 @@ cp .env.example .env
 4. Gere o client do Prisma:
 
 ```bash
-npx prisma generate
+nxp prisma generate
 ```
 
 5. Rode a migration:
 
 ```bash
-npx prisma migrate dev
+nxp prisma migrate dev
 ```
 
-6. Valide o schema:
+6. Valide types e schema:
 
 ```bash
-npx prisma validate
+nxp prisma validate
+npm run typecheck
 ```
 
 7. Rode o app:
@@ -75,18 +78,13 @@ npx prisma validate
 npm run dev
 ```
 
-## Validação da Etapa 2
+## Valida ção da Etapa 3
 
-- `npx prisma validate` deve passar
-- `npx prisma migrate dev` deve criar as tabelas e enums novos
-- o banco deve passar a ter:
-  - `StoreSettings`
-  - `RecoveryOpportunity`
-  - `RecoveryAttempt`
-  - `SyncCheckpoint`
-- a unique key de oportunidade deve impedir duplicação por origem Shopify dentro da loja
-- a unique key de checkpoint deve garantir um checkpoint por tipo de sync em cada loja
+- o helper `executeAdminGraphQL()` deve lançar erro quando a resposta HTTP não for `ok`
+- o helper `executeAdminGraphQL()` deve lançar erro quando `errors[]` vier no payload GraphQL
+- o helper `fetchAdminConnectionPage()` identifica normalizar `nodes`, `edges` e `pageInfo`
+- o cliente deve ser reutilizável pelas próximas etapas de ingestão
 
 ## Próximo passo
 
-Etapa 3: criar o cliente server-side de GraphQL da Shopify com tratamento de erro HTTP, erro GraphQL e base para paginação.
+Etapa 4: criar queries para `abandonedCheckouts` e `orders` com pagamento pendente, mapear para `RecoveryOpportunity` e implementar os syncs iniciais.
