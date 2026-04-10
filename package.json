@@ -1,0 +1,11 @@
+{
+  "name": "zapay",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Shopify embedded app para recuperação de vendas via WhatsApp",
+  "scripts": {
+    "dev": "echo \"Bootstrap inicial do projeto Zapay\"",
+    "build": "echo \"Build ainda não configurado\"",
+    "start": "echo \"Start ainda não configurado\""
+  }
+}
