@@ -2,15 +2,15 @@
 
 App embedded para Shopify Brasil focado em recuperação de vendas via WhatsApp.
 
-## Etapa 8 implementada
+## Etapa 9 implementada
 
 Nesta etapa o repositório já inclui:
 
-- rotas JSON autenticadas do app embedded
-- leitura e atualização de settings por loja
-- listagem e detalhe de oportunidades
-- envio manual para WhatsApp com registro de tentativa
-- sync manual via API
+- dashboard embedded com KPI e sync manual
+- lista de oportunidades com filtros e paginação
+- detalhe da oportunidade com histórico e envio no WhatsApp
+- tela de configurações editável
+- navegação mínima entre páginas do app
 
 ## Estrutura principal
 
@@ -47,6 +47,9 @@ app/
     app.api.opportunities.$id.send.ts
     app.api.settings.ts
     app.api.sync.ts
+    app.opportunities.tsx
+    app.opportunities.$id.tsx
+    app.settings.tsx
     _index.tsx
     app.tsx
     app._index.tsx
@@ -103,16 +106,14 @@ npm run typecheck
 npm run dev
 ```
 
-## Validação da Etapa 8
+## Validação da Etapa 9
 
-- `GET /app/api/dashboard/summary` deve retornar os KPIs da loja autenticada
-- `GET /app/api/opportunities` deve listar oportunidades com filtros
-- `GET /app/api/opportunities/:id` deve retornar detalhe com tentativas
-- `POST /app/api/opportunities/:id/send` deve criar `RecoveryAttempt` e retornar `whatsappUrl`
-- `GET /app/api/settings` deve retornar settings da loja
-- `POST /app/api/settings` deve atualizar settings da loja
-- `POST /app/api/sync` deve executar sync manual por loja
+- `/app` deve mostrar KPIs e permitir sync manual
+- `/app/opportunities` deve listar oportunidades com filtros
+- `/app/opportunities/:id` deve mostrar detalhe e histórico
+- `/app/settings` deve permitir salvar configurações
+- a navegação do app deve exibir Dashboard, Oportunidades e Configurações
 
 ## Próximo passo
 
-Etapa 9: criar a UI mínima embedded com Polaris consumindo essas rotas.
+Etapa 10: hardening básico com validação, tratamento de erro e logs.
