@@ -2,15 +2,15 @@
 
 App embedded para Shopify Brasil focado em recuperação de vendas via WhatsApp.
 
-## Etapa 9 implementada
+## Etapa 10 implementada
 
 Nesta etapa o repositório já inclui:
 
-- dashboard embedded com KPI e sync manual
-- lista de oportunidades com filtros e paginação
-- detalhe da oportunidade com histórico e envio no WhatsApp
-- tela de configurações editável
-- navegação mínima entre páginas do app
+- validação com Zod
+- tratamento de erro padronizado
+- logs básicos de operação
+- ErrorBoundary global
+- rotas críticas endurecidas para piloto
 
 ## Estrutura principal
 
@@ -18,10 +18,13 @@ Nesta etapa o repositório já inclui:
 app/
   lib/
     server/
+      logger.server.ts
       prisma.server.ts
       request-payload.server.ts
+      route-errors.server.ts
       shopify-graphql.server.ts
       store.server.ts
+      validation.server.ts
   modules/
     recovery/
       dashboard-summary.server.ts
@@ -106,14 +109,13 @@ npm run typecheck
 npm run dev
 ```
 
-## Validação da Etapa 9
+## Validação da Etapa 10
 
-- `/app` deve mostrar KPIs e permitir sync manual
-- `/app/opportunities` deve listar oportunidades com filtros
-- `/app/opportunities/:id` deve mostrar detalhe e histórico
-- `/app/settings` deve permitir salvar configurações
-- a navegação do app deve exibir Dashboard, Oportunidades e Configurações
+- payloads inválidos devem falhar com resposta consistente
+- ids ausentes ou inválidos devem retornar erro padronizado
+- logs de sync, reconciliação e envio devem ser emitidos
+- o app deve renderizar uma ErrorBoundary simples quando houver erro não tratado
 
 ## Próximo passo
 
-Etapa 10: hardening básico com validação, tratamento de erro e logs.
+Após esta etapa, o fluxo natural deixa de ser “implementar o MVP” e passa a ser “testar piloto, corrigir fricções e evoluir features”.

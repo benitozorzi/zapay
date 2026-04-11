@@ -1,5 +1,7 @@
 import { OpportunityStatus } from "@prisma/client";
 
+import { HttpError } from "../../lib/server/route-errors.server";
+import { logger } from "../../lib/server/logger.server";
 import prisma from "../../db.server";
 
 function normalizePhoneForWhatsApp(phone: string): string {
@@ -42,16 +44,16 @@ export async function sendRecoveryOpportunityViaWhatsApp(params: {
   });
 
   if (!opportunity) {
-    throw new Error("Recovery opportunity not found.");
+    throw new HttpError({ status: 404, message: "Recovery opportunity not found.", code: "OPPORTUNITY_NOT_FOUND" });
   }
 
   if (!opportunity.customerPhoneNormalized) {
-    throw new Error("Opportunity does not have a normalized phone number.");
+    throw new HttpError({ status: 400, message: "Opportunity does not have a normalized phone number.", code: "PHONE_REQUIRED" });
   }
 
   const recoveryUrl = opportunity.recoveryUrl ?? opportunity.checkoutUrl;
   if (!recoveryUrl) {
-    throw new Error("Opportunity does not have a recovery URL.");
+    throw new HttpError({ status: 400, message: "Opportunity does not have a recovery URL.", code: "RECOVERY_URL_REQUIRED" });
   }
 
   const attemptNumber = (opportunity.attempts[0]?.attemptNumber ?? 0) + 1;
@@ -84,6 +86,12 @@ export async function sendRecoveryOpportunityViaWhatsApp(params: {
 
   const phoneForWa = normalizePhoneForWhatsApp(opportunity.customerPhoneNormalized);
   const whatsappUrl = `https://wa.me/${phoneForWa}?text=${encodeURIComponent(messageRendered)}`;
+
+  logger.info("Recovery message prepared", {
+    storeId: params.storeId,
+    opportunityId: opportunity.id,
+    attemptNumber,
+  });
 
   return {
     opportunityId: opportunity.id,

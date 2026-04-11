@@ -23,7 +23,8 @@
     "@shopify/shopify-app-remix": "latest",
     "@shopify/shopify-app-session-storage-prisma": "latest",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "zod": "latest"
   },
   "devDependencies": {
     "@remix-run/dev": "latest",

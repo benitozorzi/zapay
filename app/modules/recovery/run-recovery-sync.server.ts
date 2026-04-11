@@ -1,5 +1,6 @@
 import { SyncType } from "@prisma/client";
 
+import { logger } from "../../lib/server/logger.server";
 import prisma from "../../db.server";
 import { syncAbandonedCheckouts } from "./sync-abandoned-checkouts.server";
 import { syncPendingOrders } from "./sync-pending-orders.server";
@@ -92,6 +93,8 @@ export async function runRecoverySyncForStore({
   first = 50,
 }: RunRecoverySyncForStoreParams): Promise<RunRecoverySyncForStoreResult> {
   const startedAt = new Date();
+  logger.info("Recovery sync started", { storeId, first });
+
   const store = await getStoreWithSettings(storeId);
 
   const abandonedCheckpoint = await getOrCreateSyncCheckpoint(storeId, SyncType.ABANDONED_CHECKOUTS);
@@ -136,6 +139,11 @@ export async function runRecoverySyncForStore({
         storeId,
         syncType: SyncType.ABANDONED_CHECKOUTS,
         error,
+      });
+
+      logger.error("Abandoned checkouts sync failed", {
+        storeId,
+        error: error instanceof Error ? error.message : String(error),
       });
 
       abandonedCheckoutsResult = {
@@ -189,6 +197,11 @@ export async function runRecoverySyncForStore({
         error,
       });
 
+      logger.error("Pending orders sync failed", {
+        storeId,
+        error: error instanceof Error ? error.message : String(error),
+      });
+
       pendingPaymentOrdersResult = {
         syncType: SyncType.PENDING_PAYMENT_ORDERS,
         enabled: true,
@@ -203,12 +216,20 @@ export async function runRecoverySyncForStore({
   }
 
   const finishedAt = new Date();
+  const success = abandonedCheckoutsResult.success && pendingPaymentOrdersResult.success;
+
+  logger.info("Recovery sync finished", {
+    storeId,
+    success,
+    abandonedCheckouts: abandonedCheckoutsResult.count,
+    pendingPaymentOrders: pendingPaymentOrdersResult.count,
+  });
 
   return {
     storeId,
     startedAt: startedAt.toISOString(),
     finishedAt: finishedAt.toISOString(),
-    success: abandonedCheckoutsResult.success && pendingPaymentOrdersResult.success,
+    success,
     results: {
       abandonedCheckouts: abandonedCheckoutsResult,
       pendingPaymentOrders: pendingPaymentOrdersResult,

@@ -1,5 +1,6 @@
 import { ConversionType, OpportunityStatus, Prisma } from "@prisma/client";
 
+import { logger } from "../../lib/server/logger.server";
 import prisma from "../../db.server";
 import { fetchAdminConnectionPage } from "../../lib/server/shopify-graphql.server";
 import {
@@ -7,7 +8,7 @@ import {
   PAID_ORDERS_QUERY,
   type RecoverySyncQueryVariables,
 } from "./shopify/reconciliation-shopify.queries.server";
-import type { PaidOrdersQueryData, ShopifyMailingAddressSummary, ShopifyPaidOrderNode } from "./shopify/reconciliation-shopify.types";
+import type { PaidOrdersQueryData, ShopifyPaidOrderNode } from "./shopify/reconciliation-shopify.types";
 
 const OPEN_RECONCILABLE_STATUSES = [
   OpportunityStatus.SENT_ONCE,
@@ -239,6 +240,11 @@ export async function reconcileConversionsForStore(params: {
   first?: number;
   after?: string | null;
 }) : Promise<ReconcileConversionsForStoreResult> {
+  logger.info("Reconciliation started", {
+    storeId: params.storeId,
+    first: params.first ?? 50,
+  });
+
   const settings = await getOrCreateStoreSettings(params.storeId);
   const attributionWindowStart = getAttributionWindowStart(settings.attributionWindowHours);
 
@@ -293,6 +299,13 @@ export async function reconcileConversionsForStore(params: {
       },
     });
   }
+
+  logger.info("Reconciliation finished", {
+    storeId: params.storeId,
+    scannedPaidOrders: paidOrdersPage.connection.nodes.length,
+    scannedOpenOpportunities: openOpportunities.length,
+    matchedCount: reconciledOpportunityIds.length,
+  });
 
   return {
     storeId: params.storeId,
